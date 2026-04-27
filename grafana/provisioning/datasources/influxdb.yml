@@ -1,0 +1,15 @@
+apiVersion: 1
+
+datasources:
+  - name: InfluxDB
+    type: influxdb
+    access: proxy
+    url: http://influxdb:8086
+    database: metrics
+    isDefault: true
+    editable: false
+    jsonData:
+      httpMode: GET
+      defaultBucket: metrics
+      organization: my-org
+      version: Flux

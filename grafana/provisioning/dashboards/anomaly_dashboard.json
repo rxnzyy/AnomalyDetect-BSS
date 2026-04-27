@@ -1,0 +1,37 @@
+{
+  "title": "Anomaly Detection Dashboard",
+  "editable": true,
+  "panels": [
+    {
+      "title": "Events per second",
+      "type": "graph",
+      "targets": [
+        {
+          "query": "from(bucket: \"metrics\") |> range(start: -5m) |> filter(fn: (r) => r._measurement == \"events\") |> aggregateWindow(every: 1s, fn: count) |> yield(name: \"count\")"
+        }
+      ]
+    },
+    {
+      "title": "Anomalies per minute",
+      "type": "stat",
+      "targets": [
+        {
+          "query": "from(bucket: \"metrics\") |> range(start: -1h) |> filter(fn: (r) => r._measurement == \"anomalies\") |> aggregateWindow(every: 1m, fn: count) |> last()"
+        }
+      ]
+    },
+    {
+      "title": "Event type distribution",
+      "type": "piechart",
+      "targets": [
+        {
+          "query": "from(bucket: \"metrics\") |> range(start: -1h) |> filter(fn: (r) => r._measurement == \"events\") |> group(columns: [\"event_type\"]) |> count()"
+        }
+      ]
+    }
+  ],
+  "time": {
+    "from": "now-15m",
+    "to": "now"
+  }
+}
