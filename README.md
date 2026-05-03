@@ -12,6 +12,38 @@
 - HMAC-подпись каждого сообщения
 - Минимизация поверхности атаки (нет прямых HTTP-входов, всё через Kafka)
 
+## 📁 Структура проекта
+
+```
+anomaly-detection/
+├── generator/
+│   ├── Dockerfile
+│   ├── requirements.txt
+│   └── generator.py
+├── detector/
+│   ├── Dockerfile
+│   ├── requirements.txt
+│   └── detector.py
+├── alerter/
+│   ├── Dockerfile
+│   ├── requirements.txt
+│   └── alerter.py
+├── common/
+│   ├── __init__.py
+│   └── hmac_auth.py
+├── grafana/
+│   └── provisioning/
+│       ├── datasources/
+│       │   └── influxdb.yml
+│       └── dashboards/
+│           ├── dashboard.yml
+│           └── anomaly_dashboard.json
+├── docker-compose.yml
+├── .env.example
+├── .gitignore
+└── README.md
+```
+
 ### Компоненты
 
 | Компонент | Роль | Технологии |
@@ -42,7 +74,7 @@
 ### Шаг 1: Клонирование репозитория
 
 ```bash
-git clone https://github.com/your-username/anomaly-detection.git
+git clone https://github.com/rxnzyy/AnomalyDetect-BSS.git
 cd anomaly-detection
 ```
 
@@ -105,37 +137,6 @@ alerter      | [Alerter] Alert: !! SECURITY ALERT ...
    ```
 3. В течение 10–20 секунд детектор обнаружит аномалию и алертер отправит сообщение в Telegram.
 
-## 📁 Структура проекта
-
-```
-anomaly-detection/
-├── generator/
-│   ├── Dockerfile
-│   ├── requirements.txt
-│   └── generator.py
-├── detector/
-│   ├── Dockerfile
-│   ├── requirements.txt
-│   └── detector.py
-├── alerter/
-│   ├── Dockerfile
-│   ├── requirements.txt
-│   └── alerter.py
-├── common/
-│   ├── __init__.py
-│   └── hmac_auth.py
-├── grafana/
-│   └── provisioning/
-│       ├── datasources/
-│       │   └── influxdb.yml
-│       └── dashboards/
-│           ├── dashboard.yml
-│           └── anomaly_dashboard.json
-├── docker-compose.yml
-├── .env.example
-├── .gitignore
-└── README.md
-```
 
 ## Команды управления
 
@@ -149,22 +150,6 @@ anomaly-detection/
 | Перезапустить конкретный сервис | `docker-compose restart alerter` |
 | Зайти в контейнер (отладка) | `docker exec -it generator bash` |
 
-##  Безопасность
-
-- Все секреты вынесены в `.env` и не попадают в Git.
-- HMAC-подпись предотвращает подмену сообщений в Kafka.
-- Контейнеры используют официальные slim-образы, без лишних пакетов.
-- Для промышленного развертывания рекомендуется:
-  - использовать Kafka ACL и TLS
-  - вынести секреты в Docker Secrets или HashiCorp Vault
-  - ограничить сетевые политики (например, через Calico)
-
-##  Как внести вклад
-
-1. Создайте issue с описанием улучшения
-2. Форкните репозиторий
-3. Создайте ветку `feature/your-feature`
-4. После изменений отправьте Pull Request
 
 ##  Лицензия
 
@@ -174,7 +159,7 @@ MIT (свободное использование, модификация, ра
 
 - Ефремов Роман (efremov.r.a@edu.mirea.ru)
 - Бычков Oлег (bychkov.o.i@edu.mirea.ru)
+- Трунин Максим (trunin.m.a@edu.mirea.ru) 
 
 Проект выполнен в рамках курса по киберимунным системам и конструктивной информационной безопасности.
-
 
