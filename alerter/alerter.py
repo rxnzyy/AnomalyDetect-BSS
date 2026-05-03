@@ -3,9 +3,10 @@ import json
 import os
 import requests
 import sys
+import time
 
-sys.path.append('/app/common')
-from hmac_auth import verify_signature
+sys.path.append('/app')
+from common.hmac_auth import verify_signature
 
 KAFKA_BOOTSTRAP_SERVERS = os.getenv('KAFKA_BOOTSTRAP_SERVERS', 'localhost:9092')
 TOPIC = 'anomalies'
@@ -13,6 +14,22 @@ TOPIC = 'anomalies'
 TELEGRAM_TOKEN = os.getenv('TELEGRAM_BOT_TOKEN', '')
 CHAT_ID = os.getenv('TELEGRAM_CHAT_ID', '')
 
+print(f"Alerter starting. Connecting to Kafka at {KAFKA_BOOTSTRAP_SERVERS}")
+
+# Ожидание доступности Kafka
+while True:
+    try:
+        consumer = KafkaConsumer(
+            TOPIC,
+            bootstrap_servers=KAFKA_BOOTSTRAP_SERVERS,
+            value_deserializer=lambda m: json.loads(m.decode('utf-8')),
+            auto_offset_reset='earliest'
+        )
+        print("Connected to Kafka")
+        break
+    except Exception as e:
+        print(f"Waiting for Kafka... {e}")
+        time.sleep(5)
 
 def send_telegram(text):
     if not TELEGRAM_TOKEN or not CHAT_ID:
@@ -36,27 +53,17 @@ def send_telegram(text):
         print(f"[Alerter] Telegram exception: {e}")
         return False
 
-
-consumer = KafkaConsumer(
-    TOPIC,
-    bootstrap_servers=KAFKA_BOOTSTRAP_SERVERS,
-    value_deserializer=lambda m: json.loads(m.decode('utf-8')),
-    auto_offset_reset='earliest'
-)
-
 print(f"Alerter started. Listening to {TOPIC}")
 
 for msg in consumer:
     anomaly = msg.value
 
-    # Проверка подписи аномалии
     if not verify_signature(anomaly):
         print(f"[Alerter] Invalid anomaly signature, skipping")
         continue
 
-    # Формируем сообщение
     alert_text = (
-        f"!! <b>SECURITY ALERT</b> !!\n\n"
+        f"🚨 <b>SECURITY ALERT</b> 🚨\n\n"
         f"<b>Type:</b> {anomaly.get('anomaly_type', 'unknown')}\n"
         f"<b>Severity:</b> {anomaly.get('severity', 0)}/5\n"
         f"<b>Description:</b> {anomaly.get('description', '')}\n"

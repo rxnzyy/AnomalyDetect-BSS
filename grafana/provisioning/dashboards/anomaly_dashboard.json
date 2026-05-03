@@ -1,31 +1,58 @@
 {
   "title": "Anomaly Detection Dashboard",
-  "editable": true,
   "panels": [
     {
-      "title": "Events per second",
+      "title": "Events per minute",
       "type": "graph",
       "targets": [
         {
-          "query": "from(bucket: \"metrics\") |> range(start: -5m) |> filter(fn: (r) => r._measurement == \"events\") |> aggregateWindow(every: 1s, fn: count) |> yield(name: \"count\")"
+          "measurement": "events",
+          "groupBy": [
+            {
+              "type": "time",
+              "params": ["1m"]
+            },
+            {
+              "type": "fill",
+              "params": ["null"]
+            }
+          ],
+          "select": [
+            [
+              {
+                "type": "field",
+                "params": ["value"]
+              },
+              {
+                "type": "count",
+                "params": []
+              }
+            ]
+          ]
         }
-      ]
+      ],
+      "xaxis": {
+        "mode": "time"
+      }
     },
     {
-      "title": "Anomalies per minute",
+      "title": "Anomalies detected",
       "type": "stat",
       "targets": [
         {
-          "query": "from(bucket: \"metrics\") |> range(start: -1h) |> filter(fn: (r) => r._measurement == \"anomalies\") |> aggregateWindow(every: 1m, fn: count) |> last()"
-        }
-      ]
-    },
-    {
-      "title": "Event type distribution",
-      "type": "piechart",
-      "targets": [
-        {
-          "query": "from(bucket: \"metrics\") |> range(start: -1h) |> filter(fn: (r) => r._measurement == \"events\") |> group(columns: [\"event_type\"]) |> count()"
+          "measurement": "anomalies",
+          "select": [
+            [
+              {
+                "type": "field",
+                "params": ["severity"]
+              },
+              {
+                "type": "count",
+                "params": []
+              }
+            ]
+          ]
         }
       ]
     }

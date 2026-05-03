@@ -7,26 +7,37 @@ import os
 import sys
 
 # Добавляем путь к общему модулю
-sys.path.append('/app/common')
-from hmac_auth import add_signature
+sys.path.append('/app')
+from common.hmac_auth import add_signature
 
-# Настройки Kafka
+# Настройки Kafka из переменных окружения
 KAFKA_BOOTSTRAP_SERVERS = os.getenv('KAFKA_BOOTSTRAP_SERVERS', 'localhost:9092')
 TOPIC = 'raw.events'
 
-# Инициализация продюсера
-producer = KafkaProducer(
-    bootstrap_servers=KAFKA_BOOTSTRAP_SERVERS,
-    value_serializer=lambda v: json.dumps(v).encode('utf-8')
-)
-
-# Типы событий
+# Типы событий и источники
 EVENT_TYPES = ['login_success', 'login_failed', 'file_access', 'config_change']
 SOURCES = ['app-server-1', 'app-server-2', 'db-server-1']
 
-print(f"Generator started. Sending events to {TOPIC} via {KAFKA_BOOTSTRAP_SERVERS}")
+print(f"Generator starting. Connecting to Kafka at {KAFKA_BOOTSTRAP_SERVERS}")
 
+# Ожидание доступности Kafka с повторными попытками
 while True:
+    try:
+        producer = KafkaProducer(
+            bootstrap_servers=KAFKA_BOOTSTRAP_SERVERS,
+            value_serializer=lambda v: json.dumps(v).encode('utf-8')
+        )
+        print("Connected to Kafka")
+        break
+    except Exception as e:
+        print(f"Waiting for Kafka... {e}")
+        time.sleep(5)
+
+print("Generator started. Sending events...")
+
+# Основной цикл генерации событий
+while True:
+    # Формируем обычное событие
     event = {
         "timestamp": datetime.utcnow().isoformat(),
         "source": random.choice(SOURCES),
@@ -35,16 +46,17 @@ while True:
         "user_id": f"user_{random.randint(1, 10)}"
     }
 
-    # Имитация аномального всплеска (5% событий с высоким value)
-    if random.random() < 0.05:
+    # Имитация аномалии в 10% случаев для более частого тестирования
+    if random.random() < 0.1:
         event["value"] = random.randint(200, 500)
-        event["event_type"] = "login_failed"  # делаем подозрительным
+        event["event_type"] = "login_failed"
 
-    # Подписываем сообщение
+    # Подписываем событие HMAC
     signed_event = add_signature(event)
 
-    # Отправляем
+    # Отправляем в Kafka
     producer.send(TOPIC, signed_event)
-    print(f"[Generator] Sent: {signed_event['event_type']} from {signed_event['source']} value={signed_event['value']}")
+    print(f"[Generator] Sent: {event['event_type']} from {event['source']} value={event['value']}")
 
-    time.sleep(0.5)  # 2 события в секунду
+    # Пауза 0.5 секунды (2 события в секунду)
+    time.sleep(0.5)

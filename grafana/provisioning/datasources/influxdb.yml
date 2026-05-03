@@ -7,9 +7,6 @@ datasources:
     url: http://influxdb:8086
     database: metrics
     isDefault: true
-    editable: false
+    editable: true
     jsonData:
-      httpMode: GET
-      defaultBucket: metrics
-      organization: my-org
-      version: Flux
+      version: InfluxQL

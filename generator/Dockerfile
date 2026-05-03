@@ -1,14 +1,12 @@
 FROM python:3.11-slim
+ENV PYTHONUNBUFFERED=1
 
 WORKDIR /app
 
-# Копируем зависимости
-COPY requirements.txt .
+COPY generator/requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
 
-# Копируем код сервиса и общий модуль
-COPY generator.py .
-COPY ../common /app/common
+COPY generator/generator.py .
+COPY common ./common
 
-# Запуск
 CMD ["python", "generator.py"]
